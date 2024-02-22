@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Event } from '../../shared/models/event';
 import { EventService } from '../../core/services/event.service';
+import { EventComponent } from '../../shared/components/events/event/event.component';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [],
+  imports: [EventComponent],
   templateUrl: './events.component.html',
   styleUrl: './events.component.scss',
 })
@@ -14,10 +16,17 @@ export class EventsComponent implements OnInit {
   totalPages: number = 0;
   events: Event[] = [];
 
-  constructor(private eventService: EventService) {}
+  constructor(
+    private eventService: EventService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    this.loadEvents(this.currentPage);
+    this.route.queryParams.subscribe((params) => {
+      const page = params['page'] ? Number(params['page']) : 1;
+      this.loadEvents(page);
+    });
   }
 
   loadEvents(page: number) {
@@ -26,6 +35,7 @@ export class EventsComponent implements OnInit {
         this.events = response.events;
         this.currentPage = response.current_page;
         this.totalPages = response.total_pages;
+        console.log(this.events, this.currentPage, this.totalPages);
       },
       error: (error: any) => {
         console.error('error fetching events', error);
@@ -35,13 +45,21 @@ export class EventsComponent implements OnInit {
 
   nextPage() {
     if (this.currentPage < this.totalPages) {
-      this.loadEvents(this.currentPage + 1);
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { page: this.currentPage + 1 },
+        queryParamsHandling: 'merge',
+      });
     }
   }
 
   previousPage() {
     if (this.currentPage > 1) {
-      this.loadEvents(this.currentPage - 1);
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { page: this.currentPage - 1 },
+        queryParamsHandling: 'merge',
+      });
     }
   }
 }
