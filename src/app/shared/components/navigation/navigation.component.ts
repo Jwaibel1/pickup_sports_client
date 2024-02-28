@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AuthenticationService } from '../../../core/services/authentication.service';
+import { User } from '../../models/user';
+import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-navigation',
@@ -9,19 +11,33 @@ import { AuthenticationService } from '../../../core/services/authentication.ser
   templateUrl: './navigation.component.html',
   styleUrl: './navigation.component.scss',
 })
-export class NavigationComponent {
+export class NavigationComponent implements OnInit {
   isSidebarVisible: boolean = false;
+  currentUser: User | null = null;
 
-  constructor(private authService: AuthenticationService) {}
+  constructor(
+    private authService: AuthenticationService,
+    private userService: UserService
+  ) {}
+
+  ngOnInit(): void {
+    this.userService.currentUserBehaviorSubject.subscribe((user) => {
+      this.currentUser = user;
+    });
+  }
 
   isLoggedIn() {
     return this.authService.isLoggedIn();
   }
 
   logout() {
-    this.isSidebarVisible = false;
+    if (this.isSidebarVisible) {
+      this.toggleSidebar();
+    }
+    // this.isSidebarVisible = false;
     // this.toggleSidebar();
     this.authService.logout();
+    this.userService.setCurrentUser(null);
   }
 
   toggleSidebar() {
